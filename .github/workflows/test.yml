@@ -1,0 +1,57 @@
+on: push
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - run: sudo apt-get update && sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends fuse-overlayfs make podman slirp4netns uidmap
+      - run: make --version
+      - run: podman --version
+      - run: podman system df -v
+      - run: podman image pull debian:bookworm
+      - run: podman container run --rm debian:bookworm uname -a
+      - run: podman system df -v
+  macos:
+    runs-on: macos-latest
+    steps:
+      - run: brew install podman make
+      - run: which make && make --version
+      - run: which gmake && gmake --version
+      - run: sudo ln -s "$(brew --prefix)/gmake" "$(brew --prefix)/make"
+      - run: make --version
+      - run: podman --version
+      - run: podman machine info
+      - run: podman machine init --disk-size 32 --now
+      - run: podman machine info
+      - run: podman machine list
+      - run: podman machine inspect
+      - run: podman system df -v
+      - run: podman image pull debian:bookworm
+      - run: podman container run --rm debian:bookworm uname -a
+      - run: podman system df -v
+  # windows:
+  #   runs-on: windows-latest
+  #   defaults:
+  #     run:
+  #       shell: bash
+  #   steps:
+  #     - run: make --version
+  #     - name: download podman-setup.exe
+  #       run: |
+  #         set -x
+  #         url="$(curl -s -H 'Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' https://api.github.com/repos/containers/podman/releases/latest | jq -r '.assets | .[].browser_download_url' | grep -F setup.exe | head -n 1)"
+  #         curl -L "$url" > podman-setup.exe
+  #     - name: installing podman
+  #       run: podman-setup.exe /s
+  #       shell: cmd
+  #     - name: adding podman to $PATH
+  #       run: echo 'C:\Program Files\RedHat/Podman/' >> "$GITHUB_PATH"
+  #     - run: podman --version
+  #     - run: podman machine info
+  #     - run: podman machine init --disk-size 32 --now
+  #     - run: podman machine info
+  #     - run: podman machine list
+  #     - run: podman machine inspect
+  #     - run: podman system df -v
+  #     - run: podman image pull debian:bookworm
+  #     - run: podman container run --rm debian:bookworm uname -a
+  #     - run: podman system df -v
